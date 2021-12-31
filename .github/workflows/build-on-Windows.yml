@@ -26,7 +26,7 @@ jobs:
         set CXXFLAGS=%CFLAGS%
         set LDFLAGS=-static -static-libgcc -flto -s
         git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
-        C:\msys64\usr\bin\bash -lc "cd libvpx && mkdir gcc_build && cd gcc_build && ../configure --enable-vp9_highbitdepth --enable-static"
+        C:\msys64\usr\bin\bash -lc "cd libvpx && mkdir gcc_cmake && cd gcc_cmake && ../configure --enable-vp9_highbitdepth --enable-static"
         C:\msys64\usr\bin\bash -lc "cd libvpx/gcc_cmake && make -j 2"
         copy /y libvpx\gcc_cmake\*.exe .\
         copy /y libvpx\LICENSE LICENSE

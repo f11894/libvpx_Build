@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        branch: [v1.11.0]
+        branch: [v1.11.0, v1.10.0, v1.9.0]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -22,9 +22,9 @@ jobs:
       run: |
         set MSYSTEM=MINGW64
         set HOME=${{ github.workspace }}
-        set CFLAGS=-flto -v
+        set CFLAGS=-v
         set CXXFLAGS=%CFLAGS%
-        set LDFLAGS=-static -static-libgcc -flto -s
+        set LDFLAGS=-static -static-libgcc -s
         git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
         C:\msys64\usr\bin\bash -lc "cd libvpx && mkdir gcc_cmake && cd gcc_cmake && ../configure --enable-vp9_highbitdepth --enable-static"
         C:\msys64\usr\bin\bash -lc "cd libvpx/gcc_cmake && make -j 2"

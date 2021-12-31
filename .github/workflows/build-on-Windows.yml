@@ -1,0 +1,41 @@
+name: Build on Windows
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        branch: [v1.11.0]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Install dependencies
+      shell: cmd
+      run: |
+        C:\msys64\usr\bin\bash -lc "pacman -S mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-meson mingw-w64-x86_64-ninja --noconfirm"
+    - name: build
+      shell: cmd
+      run: |
+        set MSYSTEM=MINGW64
+        set HOME=${{ github.workspace }}
+        set CFLAGS=-flto -v
+        set CXXFLAGS=%CFLAGS%
+        set LDFLAGS=-static -static-libgcc -flto -s
+        git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
+        C:\msys64\usr\bin\bash -lc "cd libvpx && mkdir gcc_build && cd gcc_build && ../configure --enable-vp9_highbitdepth --enable-static"
+        C:\msys64\usr\bin\bash -lc "cd libvpx/gcc_cmake && make -j 2"
+        copy /y libvpx\gcc_cmake\*.exe .\
+        copy /y libvpx\LICENSE LICENSE
+        copy /y libvpx\PATENTS PATENTS
+    - name: Upload result
+      uses: actions/upload-artifact@v2
+      with:
+        name: libvpx_${{ matrix.branch }}
+        path: |
+          *.exe
+          LICENSE
+          PATENTS

@@ -24,7 +24,7 @@ jobs:
         set HOME=${{ github.workspace }}
         set CFLAGS=-v
         set CXXFLAGS=%CFLAGS%
-        set LDFLAGS=-static -static-libgcc -s
+        set LDFLAGS=-static -static-libgcc -static-libstdc++ -s
         git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
         C:\msys64\usr\bin\bash -lc "cd libvpx && mkdir gcc_cmake && cd gcc_cmake && ../configure --enable-vp9_highbitdepth --enable-static"
         C:\msys64\usr\bin\bash -lc "cd libvpx/gcc_cmake && make -j 2"
@@ -32,12 +32,41 @@ jobs:
         copy /y libvpx\gcc_cmake\vpxdec.exe vpxdec.exe
         copy /y libvpx\LICENSE LICENSE
         copy /y libvpx\PATENTS PATENTS
+        7z a "libvpx_${{ matrix.branch }}.7z" vpxenc.exe vpxdec.exe LICENSE PATENTS
     - name: Upload result
       uses: actions/upload-artifact@v2
       with:
-        name: libvpx_${{ matrix.branch }}
+        name: libvpx
         path: |
-          vpxenc.exe
-          vpxdec.exe
-          LICENSE
-          PATENTS
+          libvpx_*.7z
+
+  create_release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - uses: actions/download-artifact@v2
+      with:
+        name: libvpx
+        path: artifacts
+    
+    - name: Get Date
+      id: get_date
+      run: |
+        DATE_TIME=`date +'%Y-%m-%d-%H-%M-%S'`
+        echo "::set-output name=DATE_TIME::${DATE_TIME}"        
+    # https://github.com/Mr-Ojii/L-SMASH-Works-Auto-Builds
+    - name: Create a Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RELEASE_NAME=Build-${{ steps.get_date.outputs.DATE_TIME }}
+        TAG_NAME=build-${{ steps.get_date.outputs.DATE_TIME }}
+        assets=()
+        for asset in ${{ github.workspace }}/artifacts/*.7z; do
+          assets+=("-a" "$asset")
+        done
+        hub release create "${assets[@]}" -m "$RELEASE_NAME" "$TAG_NAME"

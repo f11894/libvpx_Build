@@ -36,7 +36,7 @@ jobs:
         export HOME=${{ github.workspace }}
         export LDFLAGS="-static -static-libgcc -static-libstdc++ -s"
         git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
-        libvpx
+        cd libvpx
         mkdir gcc_cmake
         cd gcc_cmake
         ../configure --enable-vp9_highbitdepth --enable-static

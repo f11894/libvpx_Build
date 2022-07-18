@@ -1,4 +1,4 @@
-name: Build on Windows
+name: Build on branch
 
 on: [push, pull_request]
 
@@ -13,21 +13,37 @@ jobs:
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    - name: Install dependencies
-      shell: cmd
-      run: |
-        C:\msys64\usr\bin\bash -lc "pacman -S --needed mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-meson git base-devel autotools --noconfirm"
+    - uses: msys2/setup-msys2@v2
+      with:
+        location: D:\msys2_github\
+        update: true
+        install: >-
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-nasm
+            mingw-w64-x86_64-yasm
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-meson
+            git
+            base-devel
+            autotools
+        msystem: MINGW64
+        path-type: strict
     - name: build
+      shell: msys2 {0}
+      run: |
+        export HOME=${{ github.workspace }}
+        export LDFLAGS="-static -static-libgcc -static-libstdc++ -s"
+        git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
+        libvpx
+        mkdir gcc_cmake
+        cd gcc_cmake
+        ../configure --enable-vp9_highbitdepth --enable-static
+        make -j 2
+    - name: postprocessing
       shell: cmd
       run: |
-        set MSYSTEM=MINGW64
-        set HOME=${{ github.workspace }}
-        set CFLAGS=-v
-        set CXXFLAGS=%CFLAGS%
-        set LDFLAGS=-static -static-libgcc -static-libstdc++ -s
-        git clone --depth 1 -b ${{ matrix.branch }} https://chromium.googlesource.com/webm/libvpx
-        C:\msys64\usr\bin\bash -lc "cd libvpx && mkdir gcc_cmake && cd gcc_cmake && ../configure --enable-vp9_highbitdepth --enable-static"
-        C:\msys64\usr\bin\bash -lc "cd libvpx/gcc_cmake && make -j 2"
         copy /y libvpx\gcc_cmake\vpxenc.exe vpxenc.exe
         copy /y libvpx\gcc_cmake\vpxdec.exe vpxdec.exe
         copy /y libvpx\LICENSE LICENSE

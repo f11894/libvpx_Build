@@ -10,7 +10,7 @@ jobs:
         branch: [v1.12.0]
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - uses: msys2/setup-msys2@v2
@@ -50,7 +50,7 @@ jobs:
         copy /y libvpx\PATENTS PATENTS
         7z a "libvpx_${{ matrix.branch }}.7z" vpxenc.exe vpxdec.exe LICENSE PATENTS
     - name: Upload result
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: libvpx
         path: |
@@ -62,9 +62,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: libvpx
         path: artifacts
